@@ -21,7 +21,7 @@ public:
         return cantidadRobo;
     }
 
-    void mostrar() const {
+    void mostrar() override {
         std::cout << "[Comodin] Cambio de color";
 
         if (cantidadRobo > 0)

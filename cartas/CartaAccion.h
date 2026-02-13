@@ -15,7 +15,7 @@ public:
     CartaAccion(Color c, TipoCarta t)
         : Carta(c, t) {}
 
-    void mostrar() const {
+    void mostrar() override {
         std::cout << "[Accion] Color: " << CartaNumero::colorToString(color)
                   << " Tipo: " << tipoToString(tipo) << std::endl;
     }

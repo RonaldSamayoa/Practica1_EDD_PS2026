@@ -13,8 +13,10 @@
 class Juego {
 private:
     ListaCircular<Jugador*> jugadores;  // Lista circular de jugadores
-    Stack<Carta*> mazo;                 // Mazo principal
-    Stack<Carta*> descarte;             // Mazo de descarte
+    Stack<Carta*> mazo; // Mazo principal
+    Stack<Carta*> descarte; // Mazo de descarte
+
+    void construirMazo(); //hacer el mazo del jugador
 
     Configuracion config;               // Reglas activadas
 

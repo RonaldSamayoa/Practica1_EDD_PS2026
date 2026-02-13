@@ -8,13 +8,9 @@ add_executable(UNO main.cpp
         estructuras/ListaSimple.h
         estructuras/ListaCircular.h
         estructuras/Stack.h
-        cartas/Carta.cpp
         cartas/Carta.h
-        cartas/CartaNumero.cpp
         cartas/CartaNumero.h
-        cartas/CartaAccion.cpp
         cartas/CartaAccion.h
-        cartas/CartaComodin.cpp
         cartas/CartaComodin.h
         juego/Jugador.cpp
         juego/Jugador.h

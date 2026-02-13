@@ -29,7 +29,7 @@ public:
         return valor;
     }
 
-    void mostrar() const {
+    void mostrar() override {
         std::cout << "[Numero] Color: " << colorToString(color)
                   << " Valor: " << valor << std::endl;
     }
