@@ -17,6 +17,9 @@ private:
     Stack<Carta*> descarte; // Mazo de descarte
 
     void construirMazo(); //hacer el mazo del jugador
+    static void barajarLista(ListaSimple<Carta*>& lista);
+
+    static int contarElementos(ListaSimple<Carta*>& lista);
 
     Configuracion config;               // Reglas activadas
 

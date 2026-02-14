@@ -7,11 +7,15 @@
 #include "../cartas/CartaNumero.h"
 #include "../cartas/CartaAccion.h"
 #include "../cartas/CartaComodin.h"
-#include <vector>
 
 // Constructor
 Juego::Juego(const Configuracion& configuracion)
-    : config(configuracion), direccion(1), jugadorActual(nullptr) {
+    : jugadores(),
+      mazo(),
+      descarte(),
+      config(configuracion),
+      jugadorActual(nullptr),
+      direccion(1){
 }
 
 // Agrega un jugador a la lista circular
@@ -51,36 +55,98 @@ void Juego::siguienteTurno() {
 
 void Juego::construirMazo() {
 
-    // Orden de colores definido
-    std::vector<Color> colores = {
-        Color::ROJO,
-        Color::AMARILLO,
-        Color::VERDE,
-        Color::AZUL
-    };
+    ListaSimple<Carta*> bolsa;  // bolsa temporal usando tu estructura
 
-    // Recorremos cada color
+    Color colores[] = { ROJO, AMARILLO, VERDE, AZUL };
+
+    // 1️⃣ Construimos ordenado por color
     for (Color color : colores) {
 
-        //Cartas número (0 al 9)
+        // Números 0–9
         for (int i = 0; i <= 9; i++) {
-            mazo.push(new CartaNumero(color, i));
+            bolsa.insertarFinal(new CartaNumero(color, i));
         }
 
-        //Cartas de acción
-        mazo.push(new CartaAccion(color, SKIP));
-        mazo.push(new CartaAccion(color, REVERSE));
+        // Acciones
+        bolsa.insertarFinal(new CartaAccion(color, SKIP));
+        bolsa.insertarFinal(new CartaAccion(color, REVERSE));
+        bolsa.insertarFinal(new CartaAccion(color, DRAW));
 
-        // DRAW necesita cantidad (ej: +2)
-        mazo.push(new CartaAccion(color, DRAW));
-
-        //en modo UNO flip
         if (config.isModoFlip()) {
-            mazo.push(new CartaAccion(color, FLIP));
+            bolsa.insertarFinal(new CartaAccion(color, FLIP));
         }
     }
 
-    //Comodines (no tienen color fijo)
-    mazo.push(new CartaComodin(0)); // Cambio de color
-    mazo.push(new CartaComodin(4)); // +4
+    // Comodines
+    bolsa.insertarFinal(new CartaComodin(0));
+    bolsa.insertarFinal(new CartaComodin(4));
+
+    // 2️⃣ Barajamos la lista manualmente
+    barajarLista(bolsa);
+
+    // 3️⃣ Pasamos la lista al Stack
+    while (!bolsa.estaVacia()) {
+        mazo.push(bolsa.extraerPrimero());
+    }
 }
+
+int Juego::contarElementos(ListaSimple<Carta*>& lista) {
+
+    int contador = 0;
+    ListaSimple<Carta*> temp;
+
+    while (!lista.estaVacia()) {
+        temp.insertarFinal(lista.extraerPrimero());
+        contador++;
+    }
+
+    while (!temp.estaVacia()) {
+        lista.insertarFinal(temp.extraerPrimero());
+    }
+
+    return contador;
+}
+
+void Juego::barajarLista(ListaSimple<Carta*>& lista) {
+
+    // Se obtiene la cantidad total de elementos en la lista
+    int n = contarElementos(lista);
+
+    // Si la lista tiene 0 o 1 elemento, no es necesario barajar
+    if (n <= 1)
+        return;
+
+    // Se recorre la lista completa realizando reordenamientos progresivos
+    for (int i = 0; i < n; i++) {
+
+        // Se extrae el primer elemento de la lista original. Esta carta será reinsertada en una nueva posición calculada
+        Carta* primera = lista.extraerPrimero();
+
+        // Se calcula una posición de inserción basada en la iteración actual
+        // La fórmula permite variar la posición sin utilizar números aleatorios
+        int saltos = (i * 3 + 1) % n;
+
+        // Se crea una lista temporal auxiliar para reconstruir el orden
+        ListaSimple<Carta*> temp;
+
+        // Se trasladan los primeros saltos de elementos de la lista original hacia la lista temporal, preservando su orden relativo
+        for (int j = 0; j < saltos && !lista.estaVacia(); j++) {
+            temp.insertarFinal(lista.extraerPrimero());
+        }
+
+        // Se inserta la carta extraída inicialmente en la nueva posición calculada
+        temp.insertarFinal(primera);
+
+        // Se trasladan los elementos restantes de la lista original hacia la lista temporal
+        while (!lista.estaVacia()) {
+            temp.insertarFinal(lista.extraerPrimero());
+        }
+
+        // Finalmente, se reconstruye la lista original utilizando el nuevo orden generado en la lista temporal
+        while (!temp.estaVacia()) {
+            lista.insertarFinal(temp.extraerPrimero());
+        }
+    }
+}
+
+
