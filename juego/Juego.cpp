@@ -3,9 +3,6 @@
 //
 
 #include "Juego.h"
-#include "../cartas/CartaNumero.h"
-#include "../cartas/CartaAccion.h"
-#include "../cartas/CartaComodin.h"
 
 // Constructor
 Juego::Juego(const Configuracion& configuracion)
@@ -51,64 +48,6 @@ void Juego::siguienteTurno() {
     }
 }
 
-void Juego::construirMazo() {
-
-    ListaSimple<Carta*> bolsa;
-
-    Color colores[] = { ROJO, AMARILLO, VERDE, AZUL };
-
-    // Se calcula cantidad de jugadores
-    int nJugadores = contarJugadores();
-
-    // Fórmula del enunciado
-    int cantidadMazos = ((nJugadores - 1) / 6) + 1;
-
-    // Se construyen los mazos necesarios
-    for (int m = 0; m < cantidadMazos; m++) {
-
-        for (Color color : colores) {
-
-            // Número 0 (una sola vez por color)
-            bolsa.insertarFinal(new CartaNumero(color, 0));
-
-            // Números 1–9 (dos veces por color)
-            for (int i = 1; i <= 9; i++) {
-                bolsa.insertarFinal(new CartaNumero(color, i));
-                bolsa.insertarFinal(new CartaNumero(color, i));
-            }
-
-            // Acciones (dos veces por color)
-            bolsa.insertarFinal(new CartaAccion(color, SKIP));
-            bolsa.insertarFinal(new CartaAccion(color, SKIP));
-
-            bolsa.insertarFinal(new CartaAccion(color, REVERSE));
-            bolsa.insertarFinal(new CartaAccion(color, REVERSE));
-
-            bolsa.insertarFinal(new CartaAccion(color, DRAW));
-            bolsa.insertarFinal(new CartaAccion(color, DRAW));
-
-            if (config.isModoFlip()) {
-                bolsa.insertarFinal(new CartaAccion(color, FLIP));
-                bolsa.insertarFinal(new CartaAccion(color, FLIP));
-            }
-        }
-
-        // Comodines (4 normales + 4 robo)
-        for (int i = 0; i < 4; i++) {
-            bolsa.insertarFinal(new CartaComodin(0));
-            bolsa.insertarFinal(new CartaComodin(4));
-        }
-    }
-
-    // Se baraja manualmente
-    barajarLista(bolsa);
-
-    // Se pasa todo al stack mazo
-    while (!bolsa.estaVacia()) {
-        mazo.push(bolsa.extraerPrimero());
-    }
-}
-
 void Juego::iniciarPartida() {
 
     int nJugadores = contarJugadores();
@@ -117,7 +56,7 @@ void Juego::iniciarPartida() {
         return; // No se puede iniciar con menos de 2 jugadores
     }
 
-    construirMazo();
+    mazo.construir(nJugadores, config);
 
     repartirCartasIniciales(7);
 
@@ -135,8 +74,8 @@ void Juego::repartirCartasIniciales(int cantidad) {
 
         for (int i = 0; i < cantidad; i++) {
 
-            if (!mazo.estaVacia()) {
-                Carta* carta = mazo.pop();
+            if (!mazo.estaVacio()) {
+                Carta* carta = mazo.robar();
                 actual->dato->agregarCarta(carta);
             }
         }
@@ -148,9 +87,9 @@ void Juego::repartirCartasIniciales(int cantidad) {
 
 void Juego::colocarPrimeraCarta() {
 
-    while (!mazo.estaVacia()) {
+    while (!mazo.estaVacio()) {
 
-        Carta* carta = mazo.pop();
+        Carta* carta = mazo.robar();
 
         // Si no es comodín negro, se acepta como inicial
         if (!carta->esNegra()) {
@@ -159,26 +98,83 @@ void Juego::colocarPrimeraCarta() {
         }
 
         // Si es negra, la regresamos al fondo
-        mazo.push(carta);
+        mazo.apilar(carta);
     }
 }
 
+bool Juego::esJugadaValida(Carta* carta) {
 
-int Juego::contarElementos(ListaSimple<Carta*>& lista) {
+    if (descarte.estaVacia())
+        return true;
 
-    int contador = 0;
-    ListaSimple<Carta*> temp;
+    Carta* superior = descarte.peek();
 
-    while (!lista.estaVacia()) {
-        temp.insertarFinal(lista.extraerPrimero());
-        contador++;
+    // Comodín siempre válido
+    if (carta->esNegra())
+        return true;
+
+    // Coincide color
+    if (carta->getColor() == superior->getColor())
+        return true;
+
+    // Coincide tipo
+    if (carta->getTipo() == superior->getTipo())
+        return true;
+
+    // Coincide número
+    if (carta->getValor() != -1 &&
+        carta->getValor() == superior->getValor())
+        return true;
+
+    return false;
+}
+
+bool Juego::jugarCarta(Carta* carta) {
+
+    if (jugadorActual == nullptr)
+        return false;
+
+    //validar jugada
+    if (!esJugadaValida(carta))
+        return false;
+
+    //Quitar carta de la mano
+    bool eliminada = jugadorActual->dato->quitarCarta(carta);
+
+    if (!eliminada)
+        return false;
+
+    //Poner carta en descarte
+    descarte.push(carta);
+
+    //Verificar victoria básica
+    if (jugadorActual->dato->sinCartas()) {
+        // pendiente
+        return true;
     }
 
-    while (!temp.estaVacia()) {
-        lista.insertarFinal(temp.extraerPrimero());
+    //Pasar turno
+    siguienteTurno();
+
+    return true;
+}
+
+void Juego::robarCarta() {
+
+    if (jugadorActual == nullptr)
+        return;
+
+    if (!mazo.estaVacio()) {
+
+        Carta* carta = mazo.robar();
+
+        if (carta != nullptr) {
+            jugadorActual->dato->agregarCarta(carta);
+        }
     }
 
-    return contador;
+    // En modo básico: roba 1 y pasa turno
+    siguienteTurno();
 }
 
 int Juego::contarJugadores() const {
@@ -198,46 +194,6 @@ int Juego::contarJugadores() const {
 }
 
 
-void Juego::barajarLista(ListaSimple<Carta*>& lista) {
 
-    // Se obtiene la cantidad total de elementos en la lista
-    int n = contarElementos(lista);
-
-    // Si la lista tiene 0 o 1 elemento, no es necesario barajar
-    if (n <= 1)
-        return;
-
-    // Se recorre la lista completa realizando reordenamientos progresivos
-    for (int i = 0; i < n; i++) {
-
-        // Se extrae el primer elemento de la lista original. Esta carta será reinsertada en una nueva posición calculada
-        Carta* primera = lista.extraerPrimero();
-
-        // Se calcula una posición de inserción basada en la iteración actual
-        // La fórmula permite variar la posición sin utilizar números aleatorios
-        int saltos = (i * 3 + 1) % n;
-
-        // Se crea una lista temporal auxiliar para reconstruir el orden
-        ListaSimple<Carta*> temp;
-
-        // Se trasladan los primeros saltos de elementos de la lista original hacia la lista temporal, preservando su orden relativo
-        for (int j = 0; j < saltos && !lista.estaVacia(); j++) {
-            temp.insertarFinal(lista.extraerPrimero());
-        }
-
-        // Se inserta la carta extraída inicialmente en la nueva posición calculada
-        temp.insertarFinal(primera);
-
-        // Se trasladan los elementos restantes de la lista original hacia la lista temporal
-        while (!lista.estaVacia()) {
-            temp.insertarFinal(lista.extraerPrimero());
-        }
-
-        // Finalmente, se reconstruye la lista original utilizando el nuevo orden generado en la lista temporal
-        while (!temp.estaVacia()) {
-            lista.insertarFinal(temp.extraerPrimero());
-        }
-    }
-}
 
 

@@ -25,7 +25,7 @@ public:
     }
 
     // Getter del valor
-    [[nodiscard]] int getValor() const {
+    [[nodiscard]] int getValor() const override {
         return valor;
     }
 

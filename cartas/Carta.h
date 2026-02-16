@@ -22,7 +22,7 @@ public:
     }
 
     // Métodos getters
-    Color getColor() {
+    Color getColor()  {
         return color;
     }
 
@@ -35,8 +35,12 @@ public:
 
     virtual ~Carta() = default;
 
-    virtual bool esNegra() const {
+    [[nodiscard]] virtual bool esNegra() const {
         return false;
+    }
+
+    [[nodiscard]] virtual int getValor() const {
+        return -1;
     }
 
 };

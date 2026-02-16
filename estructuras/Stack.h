@@ -37,14 +37,14 @@ public:
         return dato;
     }
     // Devuelve el elemento de la cima sin eliminarlo
-    T peek() {
+    T peek() const {
         if (tope == nullptr)
             throw std::runtime_error("Stack vacío");
 
         return tope->dato;
     }
     // Verifica si la pila está vacía
-    bool estaVacia() {
+    [[nodiscard]] bool estaVacia() const {
         return tope == nullptr;
     }
     // Destructor: libera memoria de la pila

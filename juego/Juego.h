@@ -9,17 +9,14 @@
 #include "Jugador.h"
 #include "Configuracion.h"
 #include "../cartas/Carta.h"
+#include "Mazo.h"
 
 class Juego {
 private:
     ListaCircular<Jugador*> jugadores;  // Lista circular de jugadores
-    Stack<Carta*> mazo; // Mazo principal
+    Mazo mazo; //implementamos las funciones de clase mazo
     Stack<Carta*> descarte; // Mazo de descarte
 
-    void construirMazo(); //hacer el mazo del jugador
-    static void barajarLista(ListaSimple<Carta*>& lista);
-
-    static int contarElementos(ListaSimple<Carta*>& lista);
     int contarJugadores() const;
 
     Configuracion config;               // Reglas activadas
@@ -40,6 +37,12 @@ public:
     void repartirCartasIniciales(int cantidad);
 
     void colocarPrimeraCarta();
+
+    bool esJugadaValida(Carta* carta);
+
+    bool jugarCarta(Carta* carta);
+
+    void robarCarta();
 
     // Avanzar turno
     void siguienteTurno();

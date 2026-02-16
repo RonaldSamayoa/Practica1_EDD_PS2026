@@ -5,7 +5,6 @@
 #ifndef UNO_CARTACOMODIN_H
 #define UNO_CARTACOMODIN_H
 #include "Carta.h"
-#include "CartaNumero.h"
 
 // Carta comodín (cambio de color, con o sin robo)
 class CartaComodin : public Carta  {
@@ -21,7 +20,7 @@ public:
         return cantidadRobo;
     }
 
-    bool esNegra() const override {
+    [[nodiscard]] bool esNegra() const override {
         return true;
     }
 
