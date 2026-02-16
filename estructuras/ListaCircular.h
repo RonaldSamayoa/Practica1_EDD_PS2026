@@ -42,12 +42,12 @@ public:
     }
 
     // Devuelve la cabeza (inicio de la lista)
-    Nodo<T>* getCabeza() {
+    Nodo<T>* getCabeza() const {
         return cabeza;
     }
 
     // Verifica si la lista está vacía
-    bool estaVacia() {
+    bool estaVacia() const {
         return cabeza == nullptr;
     }
 

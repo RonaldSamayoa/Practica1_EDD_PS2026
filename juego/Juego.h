@@ -20,6 +20,7 @@ private:
     static void barajarLista(ListaSimple<Carta*>& lista);
 
     static int contarElementos(ListaSimple<Carta*>& lista);
+    int contarJugadores() const;
 
     Configuracion config;               // Reglas activadas
 
@@ -35,6 +36,10 @@ public:
 
     // Inicializar partida (crear mazo, repartir, etc.)
     void iniciarPartida();
+
+    void repartirCartasIniciales(int cantidad);
+
+    void colocarPrimeraCarta();
 
     // Avanzar turno
     void siguienteTurno();

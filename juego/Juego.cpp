@@ -3,7 +3,6 @@
 //
 
 #include "Juego.h"
-#include <stdexcept>
 #include "../cartas/CartaNumero.h"
 #include "../cartas/CartaAccion.h"
 #include "../cartas/CartaComodin.h"
@@ -31,8 +30,7 @@ void Juego::agregarJugador(Jugador* jugador) {
 // Devuelve el jugador actual
 Jugador* Juego::getJugadorActual() const {
     if (jugadorActual == nullptr)
-        throw std::runtime_error("No hay jugadores en la partida");
-
+        return nullptr;
     return jugadorActual->dato;
 }
 
@@ -44,7 +42,7 @@ void Juego::cambiarDireccion() {
 // Avanza al siguiente jugador según la dirección
 void Juego::siguienteTurno() {
     if (jugadorActual == nullptr)
-        throw std::runtime_error("No hay jugadores en la partida");
+        return;
 
     if (direccion == 1) {
         jugadorActual = jugadorActual->siguiente;
@@ -55,40 +53,116 @@ void Juego::siguienteTurno() {
 
 void Juego::construirMazo() {
 
-    ListaSimple<Carta*> bolsa;  // bolsa temporal usando tu estructura
+    ListaSimple<Carta*> bolsa;
 
     Color colores[] = { ROJO, AMARILLO, VERDE, AZUL };
 
-    // 1️⃣ Construimos ordenado por color
-    for (Color color : colores) {
+    // Se calcula cantidad de jugadores
+    int nJugadores = contarJugadores();
 
-        // Números 0–9
-        for (int i = 0; i <= 9; i++) {
-            bolsa.insertarFinal(new CartaNumero(color, i));
+    // Fórmula del enunciado
+    int cantidadMazos = ((nJugadores - 1) / 6) + 1;
+
+    // Se construyen los mazos necesarios
+    for (int m = 0; m < cantidadMazos; m++) {
+
+        for (Color color : colores) {
+
+            // Número 0 (una sola vez por color)
+            bolsa.insertarFinal(new CartaNumero(color, 0));
+
+            // Números 1–9 (dos veces por color)
+            for (int i = 1; i <= 9; i++) {
+                bolsa.insertarFinal(new CartaNumero(color, i));
+                bolsa.insertarFinal(new CartaNumero(color, i));
+            }
+
+            // Acciones (dos veces por color)
+            bolsa.insertarFinal(new CartaAccion(color, SKIP));
+            bolsa.insertarFinal(new CartaAccion(color, SKIP));
+
+            bolsa.insertarFinal(new CartaAccion(color, REVERSE));
+            bolsa.insertarFinal(new CartaAccion(color, REVERSE));
+
+            bolsa.insertarFinal(new CartaAccion(color, DRAW));
+            bolsa.insertarFinal(new CartaAccion(color, DRAW));
+
+            if (config.isModoFlip()) {
+                bolsa.insertarFinal(new CartaAccion(color, FLIP));
+                bolsa.insertarFinal(new CartaAccion(color, FLIP));
+            }
         }
 
-        // Acciones
-        bolsa.insertarFinal(new CartaAccion(color, SKIP));
-        bolsa.insertarFinal(new CartaAccion(color, REVERSE));
-        bolsa.insertarFinal(new CartaAccion(color, DRAW));
-
-        if (config.isModoFlip()) {
-            bolsa.insertarFinal(new CartaAccion(color, FLIP));
+        // Comodines (4 normales + 4 robo)
+        for (int i = 0; i < 4; i++) {
+            bolsa.insertarFinal(new CartaComodin(0));
+            bolsa.insertarFinal(new CartaComodin(4));
         }
     }
 
-    // Comodines
-    bolsa.insertarFinal(new CartaComodin(0));
-    bolsa.insertarFinal(new CartaComodin(4));
-
-    // 2️⃣ Barajamos la lista manualmente
+    // Se baraja manualmente
     barajarLista(bolsa);
 
-    // 3️⃣ Pasamos la lista al Stack
+    // Se pasa todo al stack mazo
     while (!bolsa.estaVacia()) {
         mazo.push(bolsa.extraerPrimero());
     }
 }
+
+void Juego::iniciarPartida() {
+
+    int nJugadores = contarJugadores();
+
+    if (nJugadores < 2) {
+        return; // No se puede iniciar con menos de 2 jugadores
+    }
+
+    construirMazo();
+
+    repartirCartasIniciales(7);
+
+    colocarPrimeraCarta();
+}
+
+void Juego::repartirCartasIniciales(int cantidad) {
+
+    Nodo<Jugador*>* actual = jugadores.getCabeza();
+
+    if (actual == nullptr)
+        return;
+
+    do {
+
+        for (int i = 0; i < cantidad; i++) {
+
+            if (!mazo.estaVacia()) {
+                Carta* carta = mazo.pop();
+                actual->dato->agregarCarta(carta);
+            }
+        }
+
+        actual = actual->siguiente;
+
+    } while (actual != jugadores.getCabeza());
+}
+
+void Juego::colocarPrimeraCarta() {
+
+    while (!mazo.estaVacia()) {
+
+        Carta* carta = mazo.pop();
+
+        // Si no es comodín negro, se acepta como inicial
+        if (!carta->esNegra()) {
+            descarte.push(carta);
+            break;
+        }
+
+        // Si es negra, la regresamos al fondo
+        mazo.push(carta);
+    }
+}
+
 
 int Juego::contarElementos(ListaSimple<Carta*>& lista) {
 
@@ -106,6 +180,23 @@ int Juego::contarElementos(ListaSimple<Carta*>& lista) {
 
     return contador;
 }
+
+int Juego::contarJugadores() const {
+
+    int contador = 0;
+    Nodo<Jugador*>* temp = jugadores.getCabeza();
+
+    if (temp == nullptr)
+        return 0;
+
+    do {
+        contador++;
+        temp = temp->siguiente;
+    } while (temp != jugadores.getCabeza());
+
+    return contador;
+}
+
 
 void Juego::barajarLista(ListaSimple<Carta*>& lista) {
 

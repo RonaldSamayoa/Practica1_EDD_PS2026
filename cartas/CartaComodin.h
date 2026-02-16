@@ -21,6 +21,10 @@ public:
         return cantidadRobo;
     }
 
+    bool esNegra() const override {
+        return true;
+    }
+
     void mostrar() override {
         std::cout << "[Comodin] Cambio de color";
 

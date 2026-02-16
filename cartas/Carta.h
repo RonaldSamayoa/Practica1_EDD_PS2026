@@ -34,6 +34,11 @@ public:
     virtual void mostrar() = 0;
 
     virtual ~Carta() = default;
+
+    virtual bool esNegra() const {
+        return false;
+    }
+
 };
 
 #endif //UNO_CARTA_H
