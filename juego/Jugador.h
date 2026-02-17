@@ -36,6 +36,15 @@ public:
         return mano.estaVacia();
     }
 
+    // Devuelve la cantidad de cartas en mano
+    [[nodiscard]] int cantidadCartas() const;
+
+    // Verifica si tiene alguna carta de cierto color
+    [[nodiscard]] bool tieneColor(Color color) const;
+
+    // Permite recorrer cartas
+    ListaSimple<Carta*>& getMano();
+
 };
 
 #endif //UNO_JUGADOR_H

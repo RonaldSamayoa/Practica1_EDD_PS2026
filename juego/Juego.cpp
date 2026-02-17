@@ -11,7 +11,11 @@ Juego::Juego(const Configuracion& configuracion)
       descarte(),
       config(configuracion),
       jugadorActual(nullptr),
-      direccion(1){
+      direccion(1),
+      partidaTerminada(false),
+      ganador(nullptr),
+      jugadorPendienteUNO(nullptr),
+      unoDeclarado(false)  {
 }
 
 // Agrega un jugador a la lista circular
@@ -46,6 +50,14 @@ void Juego::siguienteTurno() {
     } else {
         jugadorActual = jugadores.buscarAnterior(jugadorActual);
     }
+
+    // Si cambió el turno y nadie reportó, se pierde oportunidad
+    if (jugadorPendienteUNO != nullptr &&
+        jugadorPendienteUNO != jugadorActual->dato) {
+
+        jugadorPendienteUNO = nullptr;
+        unoDeclarado = false;
+        }
 }
 
 void Juego::iniciarPartida() {
@@ -131,6 +143,7 @@ bool Juego::esJugadaValida(Carta* carta) {
 
 bool Juego::jugarCarta(Carta* carta) {
 
+    //Verificar que haya jugador actual
     if (jugadorActual == nullptr)
         return false;
 
@@ -147,22 +160,95 @@ bool Juego::jugarCarta(Carta* carta) {
     //Poner carta en descarte
     descarte.push(carta);
 
-    //Verificar victoria básica
+    // Verificar si quedó con una carta
+    if (jugadorActual->dato->cantidadCartas() == 1) {
+        jugadorPendienteUNO = jugadorActual->dato;
+        unoDeclarado = false;
+    }
+
+    //Verificar si ganó
     if (jugadorActual->dato->sinCartas()) {
-        // pendiente
+        partidaTerminada = true;
+        ganador = jugadorActual->dato;
         return true;
     }
 
-    //Pasar turno
+    if (partidaTerminada)
+        return false;
+
+    //Aplicar efecto según tipo
+    TipoCarta tipo = carta->getTipo();
+
+    switch (tipo) {
+
+        case SKIP:
+            // Saltamos al siguiente jugador
+            siguienteTurno();
+            break;
+
+        case REVERSE:
+            cambiarDireccion();
+
+            // Si solo hay 2 jugadores, REVERSE actúa como SKIP
+            if (contarJugadores() == 2) {
+                siguienteTurno();
+            }
+            break;
+
+        case DRAW: {
+            // El siguiente jugador roba 2 cartas
+            siguienteTurno();
+
+            Jugador* afectado = jugadorActual->dato;
+
+            for (int i = 0; i < 2; i++) {
+                if (mazo.estaVacio()) {
+                    remezclarDescarteEnMazo();
+                }
+
+                if (!mazo.estaVacio()) {
+                    afectado->agregarCarta(mazo.robar());
+                }
+            }
+            break;
+        }
+
+        case COMODIN:
+            // elección de color
+            break;
+
+        case FLIP:
+            // implementar modo flip
+            break;
+
+        case PERSONALIZADA:
+            //implementar reglas personalizadas
+            break;
+
+        case NUMERO:
+        default:
+            // No tiene efecto especial
+            break;
+    }
+
+    // Pasar turno normalmente
     siguienteTurno();
 
     return true;
 }
 
+
 void Juego::robarCarta() {
+
+    if (partidaTerminada)
+        return;
 
     if (jugadorActual == nullptr)
         return;
+
+    if (mazo.estaVacio()) {
+        remezclarDescarteEnMazo();
+    }
 
     if (!mazo.estaVacio()) {
 
@@ -173,7 +259,6 @@ void Juego::robarCarta() {
         }
     }
 
-    // En modo básico: roba 1 y pasa turno
     siguienteTurno();
 }
 
@@ -192,6 +277,87 @@ int Juego::contarJugadores() const {
 
     return contador;
 }
+
+void Juego::remezclarDescarteEnMazo() {
+
+    // Si el descarte está vacío o solo tiene 1 carta, no se puede remezclar
+    if (descarte.estaVacia())
+        return;
+
+    // Guardamos la carta superior (no se mezcla)
+    Carta* cartaSuperior = descarte.pop();
+
+    ListaSimple<Carta*> bolsa;
+
+    // Pasamos todas las demás cartas del descarte a una lista temporal
+    while (!descarte.estaVacia()) {
+        bolsa.insertarFinal(descarte.pop());
+    }
+
+    // Volvemos a apilar en el mazo
+    while (!bolsa.estaVacia()) {
+        mazo.apilar(bolsa.extraerPrimero());
+    }
+
+    // Restauramos la carta superior al descarte
+    descarte.push(cartaSuperior);
+}
+
+bool Juego::estaTerminada() const {
+    return partidaTerminada;
+}
+
+Jugador* Juego::getGanador() const {
+    return ganador;
+}
+
+void Juego::declararUNO() {
+
+    if (jugadorActual == nullptr)
+        return;
+
+    if (jugadorPendienteUNO == jugadorActual->dato) {
+        unoDeclarado = true;
+    }
+}
+
+void Juego::reportarUNO() {
+
+    if (jugadorPendienteUNO == nullptr)
+        return;
+
+    // Si no declaró UNO correctamente
+    if (!unoDeclarado) {
+
+        for (int i = 0; i < 2; i++) {
+
+            if (mazo.estaVacio())
+                remezclarDescarteEnMazo();
+
+            if (!mazo.estaVacio()) {
+                jugadorPendienteUNO->agregarCarta(mazo.robar());
+            }
+        }
+    }
+    else {
+        // Reporte incorrecto → el reportador (jugador actual) roba 2
+
+        for (int i = 0; i < 2; i++) {
+
+            if (mazo.estaVacio())
+                remezclarDescarteEnMazo();
+
+            if (!mazo.estaVacio()) {
+                jugadorActual->dato->agregarCarta(mazo.robar());
+            }
+        }
+    }
+
+    // Limpiar estado
+    jugadorPendienteUNO = nullptr;
+    unoDeclarado = false;
+}
+
 
 
 

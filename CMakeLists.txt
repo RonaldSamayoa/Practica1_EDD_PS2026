@@ -21,4 +21,6 @@ add_executable(UNO main.cpp
         util/Colores.h
         util/TiposCarta.h
         juego/Mazo.cpp
-        juego/Mazo.h)
+        juego/Mazo.h
+        juego/ReglasJuego.cpp
+        juego/ReglasJuego.h)

@@ -17,12 +17,21 @@ private:
     Mazo mazo; //implementamos las funciones de clase mazo
     Stack<Carta*> descarte; // Mazo de descarte
 
-    int contarJugadores() const;
+    [[nodiscard]] int contarJugadores() const;
 
     Configuracion config;               // Reglas activadas
 
     Nodo<Jugador*>* jugadorActual;      // Nodo actual en la lista circular
     int direccion;                      // 1 = normal, -1 = reversa
+
+    void remezclarDescarteEnMazo();
+
+    bool partidaTerminada;
+    Jugador* ganador;
+
+    Jugador* jugadorPendienteUNO;
+    bool unoDeclarado;
+
 
 public:
     // Constructor
@@ -53,7 +62,12 @@ public:
     // Obtener jugador actual
     [[nodiscard]] Jugador* getJugadorActual() const;
 
-};
+    [[nodiscard]] bool estaTerminada() const;
+    [[nodiscard]] Jugador* getGanador() const;
 
+    void declararUNO();
+    void reportarUNO();
+
+};
 
 #endif //UNO_JUEGO_H

@@ -109,6 +109,10 @@ public:
         return dato;
     }
 
+    Nodo<T>* getCabeza() const {
+        return cabeza;
+    }
+
     // Destructor: libera toda la memoria de la lista
     ~ListaSimple() {
         while (cabeza != nullptr) {
