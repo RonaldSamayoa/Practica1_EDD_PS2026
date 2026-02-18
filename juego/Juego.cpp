@@ -1,8 +1,8 @@
 //
 // Created by ronald on 9/2/26.
 //
-
 #include "Juego.h"
+#include "MotorReglas.h"
 
 // Constructor
 Juego::Juego(const Configuracion& configuracion)
@@ -114,33 +114,6 @@ void Juego::colocarPrimeraCarta() {
     }
 }
 
-bool Juego::esJugadaValida(Carta* carta) {
-
-    if (descarte.estaVacia())
-        return true;
-
-    Carta* superior = descarte.peek();
-
-    // Comodín siempre válido
-    if (carta->esNegra())
-        return true;
-
-    // Coincide color
-    if (carta->getColor() == superior->getColor())
-        return true;
-
-    // Coincide tipo
-    if (carta->getTipo() == superior->getTipo())
-        return true;
-
-    // Coincide número
-    if (carta->getValor() != -1 &&
-        carta->getValor() == superior->getValor())
-        return true;
-
-    return false;
-}
-
 bool Juego::jugarCarta(Carta* carta) {
 
     //Verificar que haya jugador actual
@@ -148,7 +121,7 @@ bool Juego::jugarCarta(Carta* carta) {
         return false;
 
     //validar jugada
-    if (!esJugadaValida(carta))
+    if (!MotorReglas::esJugadaValida(carta, descarte))
         return false;
 
     //Quitar carta de la mano
@@ -179,64 +152,13 @@ bool Juego::jugarCarta(Carta* carta) {
     //Aplicar efecto según tipo
     TipoCarta tipo = carta->getTipo();
 
-    switch (tipo) {
-
-        case SKIP:
-            // Saltamos al siguiente jugador
-            siguienteTurno();
-            break;
-
-        case REVERSE:
-            cambiarDireccion();
-
-            // Si solo hay 2 jugadores, REVERSE actúa como SKIP
-            if (contarJugadores() == 2) {
-                siguienteTurno();
-            }
-            break;
-
-        case DRAW: {
-            // El siguiente jugador roba 2 cartas
-            siguienteTurno();
-
-            Jugador* afectado = jugadorActual->dato;
-
-            for (int i = 0; i < 2; i++) {
-                if (mazo.estaVacio()) {
-                    remezclarDescarteEnMazo();
-                }
-
-                if (!mazo.estaVacio()) {
-                    afectado->agregarCarta(mazo.robar());
-                }
-            }
-            break;
-        }
-
-        case COMODIN:
-            // elección de color
-            break;
-
-        case FLIP:
-            // implementar modo flip
-            break;
-
-        case PERSONALIZADA:
-            //implementar reglas personalizadas
-            break;
-
-        case NUMERO:
-        default:
-            // No tiene efecto especial
-            break;
-    }
+    MotorReglas::aplicarEfecto(carta, *this);
 
     // Pasar turno normalmente
     siguienteTurno();
 
     return true;
 }
-
 
 void Juego::robarCarta() {
 
@@ -358,6 +280,28 @@ void Juego::reportarUNO() {
     unoDeclarado = false;
 }
 
+int Juego::contarJugadoresPublico() const {
+    return contarJugadores();
+}
+
+bool Juego::mazoVacio() const {
+    return mazo.estaVacio();
+}
+
+Carta* Juego::robarDelMazo() {
+    return mazo.robar();
+}
+
+void Juego::remezclarMazo() {
+    remezclarDescarteEnMazo();
+}
+
+Jugador* Juego::jugadorActualPtr() {
+    if (jugadorActual == nullptr)
+        return nullptr;
+
+    return jugadorActual->dato;
+}
 
 
 

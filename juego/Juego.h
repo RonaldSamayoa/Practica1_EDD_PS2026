@@ -47,8 +47,6 @@ public:
 
     void colocarPrimeraCarta();
 
-    bool esJugadaValida(Carta* carta);
-
     bool jugarCarta(Carta* carta);
 
     void robarCarta();
@@ -68,6 +66,15 @@ public:
     void declararUNO();
     void reportarUNO();
 
+    int contarJugadoresPublico() const;
+
+    bool mazoVacio() const;
+
+    Carta* robarDelMazo();
+
+    void remezclarMazo();
+
+    Jugador* jugadorActualPtr();
 };
 
 #endif //UNO_JUEGO_H
