@@ -6,12 +6,11 @@
 #define UNO_MOTORREGLAS_H
 
 #include "../cartas/Carta.h"
-#include "../estructuras/Stack.h"
 
 class Juego;
 class MotorReglas {
 public:
-    static bool esJugadaValida(Carta* carta, Stack<Carta*>& descarte);
+    static bool esJugadaValida(Carta* carta, Carta* cartaSuperior);
 
     static void aplicarEfecto(Carta* carta, Juego& juego);
 };

@@ -7,15 +7,13 @@
 // Constructor
 Juego::Juego(const Configuracion& configuracion)
     : jugadores(),
-      mazo(),
-      descarte(),
+      gestorCartas(),
+      controlUNO(),
       config(configuracion),
       jugadorActual(nullptr),
       direccion(1),
       partidaTerminada(false),
-      ganador(nullptr),
-      jugadorPendienteUNO(nullptr),
-      unoDeclarado(false)  {
+      ganador(nullptr)  {
 }
 
 // Agrega un jugador a la lista circular
@@ -52,12 +50,7 @@ void Juego::siguienteTurno() {
     }
 
     // Si cambió el turno y nadie reportó, se pierde oportunidad
-    if (jugadorPendienteUNO != nullptr &&
-        jugadorPendienteUNO != jugadorActual->dato) {
-
-        jugadorPendienteUNO = nullptr;
-        unoDeclarado = false;
-        }
+    controlUNO.limpiarSiCambiaTurno(jugadorActual->dato);
 }
 
 void Juego::iniciarPartida() {
@@ -68,50 +61,9 @@ void Juego::iniciarPartida() {
         return; // No se puede iniciar con menos de 2 jugadores
     }
 
-    mazo.construir(nJugadores, config);
-
-    repartirCartasIniciales(7);
-
-    colocarPrimeraCarta();
-}
-
-void Juego::repartirCartasIniciales(int cantidad) {
-
-    Nodo<Jugador*>* actual = jugadores.getCabeza();
-
-    if (actual == nullptr)
-        return;
-
-    do {
-
-        for (int i = 0; i < cantidad; i++) {
-
-            if (!mazo.estaVacio()) {
-                Carta* carta = mazo.robar();
-                actual->dato->agregarCarta(carta);
-            }
-        }
-
-        actual = actual->siguiente;
-
-    } while (actual != jugadores.getCabeza());
-}
-
-void Juego::colocarPrimeraCarta() {
-
-    while (!mazo.estaVacio()) {
-
-        Carta* carta = mazo.robar();
-
-        // Si no es comodín negro, se acepta como inicial
-        if (!carta->esNegra()) {
-            descarte.push(carta);
-            break;
-        }
-
-        // Si es negra, la regresamos al fondo
-        mazo.apilar(carta);
-    }
+    gestorCartas.inicializar(nJugadores, config);
+    gestorCartas.repartirInicial(jugadores, 7);
+    gestorCartas.colocarPrimeraCarta();
 }
 
 bool Juego::jugarCarta(Carta* carta) {
@@ -121,7 +73,7 @@ bool Juego::jugarCarta(Carta* carta) {
         return false;
 
     //validar jugada
-    if (!MotorReglas::esJugadaValida(carta, descarte))
+    if (!MotorReglas::esJugadaValida(carta, gestorCartas.cartaSuperior()))
         return false;
 
     //Quitar carta de la mano
@@ -131,13 +83,10 @@ bool Juego::jugarCarta(Carta* carta) {
         return false;
 
     //Poner carta en descarte
-    descarte.push(carta);
+    gestorCartas.descartar(carta);
 
     // Verificar si quedó con una carta
-    if (jugadorActual->dato->cantidadCartas() == 1) {
-        jugadorPendienteUNO = jugadorActual->dato;
-        unoDeclarado = false;
-    }
+    controlUNO.verificarCartaUnica(jugadorActual->dato);
 
     //Verificar si ganó
     if (jugadorActual->dato->sinCartas()) {
@@ -162,23 +111,13 @@ bool Juego::jugarCarta(Carta* carta) {
 
 void Juego::robarCarta() {
 
-    if (partidaTerminada)
+    if (partidaTerminada || jugadorActual == nullptr)
         return;
 
-    if (jugadorActual == nullptr)
-        return;
+    Carta* carta = gestorCartas.robarCarta();
 
-    if (mazo.estaVacio()) {
-        remezclarDescarteEnMazo();
-    }
-
-    if (!mazo.estaVacio()) {
-
-        Carta* carta = mazo.robar();
-
-        if (carta != nullptr) {
-            jugadorActual->dato->agregarCarta(carta);
-        }
+    if (carta != nullptr) {
+        jugadorActual->dato->agregarCarta(carta);
     }
 
     siguienteTurno();
@@ -200,31 +139,6 @@ int Juego::contarJugadores() const {
     return contador;
 }
 
-void Juego::remezclarDescarteEnMazo() {
-
-    // Si el descarte está vacío o solo tiene 1 carta, no se puede remezclar
-    if (descarte.estaVacia())
-        return;
-
-    // Guardamos la carta superior (no se mezcla)
-    Carta* cartaSuperior = descarte.pop();
-
-    ListaSimple<Carta*> bolsa;
-
-    // Pasamos todas las demás cartas del descarte a una lista temporal
-    while (!descarte.estaVacia()) {
-        bolsa.insertarFinal(descarte.pop());
-    }
-
-    // Volvemos a apilar en el mazo
-    while (!bolsa.estaVacia()) {
-        mazo.apilar(bolsa.extraerPrimero());
-    }
-
-    // Restauramos la carta superior al descarte
-    descarte.push(cartaSuperior);
-}
-
 bool Juego::estaTerminada() const {
     return partidaTerminada;
 }
@@ -234,50 +148,18 @@ Jugador* Juego::getGanador() const {
 }
 
 void Juego::declararUNO() {
-
     if (jugadorActual == nullptr)
         return;
-
-    if (jugadorPendienteUNO == jugadorActual->dato) {
-        unoDeclarado = true;
-    }
+    controlUNO.declararUNO(jugadorActual->dato);
 }
 
 void Juego::reportarUNO() {
 
-    if (jugadorPendienteUNO == nullptr)
+    if (jugadorActual == nullptr)
         return;
 
-    // Si no declaró UNO correctamente
-    if (!unoDeclarado) {
-
-        for (int i = 0; i < 2; i++) {
-
-            if (mazo.estaVacio())
-                remezclarDescarteEnMazo();
-
-            if (!mazo.estaVacio()) {
-                jugadorPendienteUNO->agregarCarta(mazo.robar());
-            }
-        }
-    }
-    else {
-        // Reporte incorrecto → el reportador (jugador actual) roba 2
-
-        for (int i = 0; i < 2; i++) {
-
-            if (mazo.estaVacio())
-                remezclarDescarteEnMazo();
-
-            if (!mazo.estaVacio()) {
-                jugadorActual->dato->agregarCarta(mazo.robar());
-            }
-        }
-    }
-
-    // Limpiar estado
-    jugadorPendienteUNO = nullptr;
-    unoDeclarado = false;
+    controlUNO.reportarUNO(jugadorActual->dato,
+                           gestorCartas);
 }
 
 int Juego::contarJugadoresPublico() const {
@@ -285,15 +167,15 @@ int Juego::contarJugadoresPublico() const {
 }
 
 bool Juego::mazoVacio() const {
-    return mazo.estaVacio();
+    return gestorCartas.mazoVacio();
 }
 
 Carta* Juego::robarDelMazo() {
-    return mazo.robar();
+    return gestorCartas.robarCarta();
 }
 
 void Juego::remezclarMazo() {
-    remezclarDescarteEnMazo();
+    gestorCartas.forzarRemezcla();
 }
 
 Jugador* Juego::jugadorActualPtr() {

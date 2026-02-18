@@ -9,29 +9,23 @@
 #include "Jugador.h"
 #include "Configuracion.h"
 #include "../cartas/Carta.h"
-#include "Mazo.h"
+#include "GestorCartas.h"
+#include "ControlUNO.h"
 
 class Juego {
 private:
     ListaCircular<Jugador*> jugadores;  // Lista circular de jugadores
-    Mazo mazo; //implementamos las funciones de clase mazo
-    Stack<Carta*> descarte; // Mazo de descarte
-
     [[nodiscard]] int contarJugadores() const;
 
+    GestorCartas gestorCartas;
+    ControlUNO controlUNO;
     Configuracion config;               // Reglas activadas
 
     Nodo<Jugador*>* jugadorActual;      // Nodo actual en la lista circular
     int direccion;                      // 1 = normal, -1 = reversa
 
-    void remezclarDescarteEnMazo();
-
     bool partidaTerminada;
     Jugador* ganador;
-
-    Jugador* jugadorPendienteUNO;
-    bool unoDeclarado;
-
 
 public:
     // Constructor
@@ -42,10 +36,6 @@ public:
 
     // Inicializar partida (crear mazo, repartir, etc.)
     void iniciarPartida();
-
-    void repartirCartasIniciales(int cantidad);
-
-    void colocarPrimeraCarta();
 
     bool jugarCarta(Carta* carta);
 
@@ -66,9 +56,9 @@ public:
     void declararUNO();
     void reportarUNO();
 
-    int contarJugadoresPublico() const;
+    [[nodiscard]] int contarJugadoresPublico() const;
 
-    bool mazoVacio() const;
+    [[nodiscard]] bool mazoVacio() const;
 
     Carta* robarDelMazo();
 

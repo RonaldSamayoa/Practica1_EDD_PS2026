@@ -6,12 +6,10 @@
 #include "../util/TiposCarta.h"
 #include "Juego.h"
 
-bool MotorReglas::esJugadaValida(Carta* carta, Stack<Carta*>& descarte) {
-
-    if (descarte.estaVacia())
+bool MotorReglas::esJugadaValida(Carta* carta, Carta* superior) {
+    // Si no hay carta superior (inicio de partida)
+    if (superior == nullptr)
         return true;
-
-    Carta* superior = descarte.peek();
 
     //comodin siempre es valido
     if (carta->esNegra())
@@ -60,12 +58,9 @@ void MotorReglas::aplicarEfecto(Carta* carta, Juego& juego) {
 
             for (int i = 0; i < 2; i++) {
 
-                if (juego.mazoVacio())
-                    juego.remezclarMazo();
-
-                if (!juego.mazoVacio()) {
-                    afectado->agregarCarta(juego.robarDelMazo());
-                }
+                Carta* carta = juego.robarDelMazo();
+                if (carta != nullptr)
+                    afectado->agregarCarta(carta);
             }
             break;
         }
