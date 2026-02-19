@@ -10,7 +10,7 @@
 class Juego;
 class MotorReglas {
 public:
-    static bool esJugadaValida(Carta* carta, Carta* cartaSuperior);
+    static bool esJugadaValida(Carta* carta, Carta* cartaSuperior, Color colorActivo);
 
     static void aplicarEfecto(Carta* carta, Juego& juego);
 };

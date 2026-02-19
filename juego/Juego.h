@@ -11,6 +11,7 @@
 #include "../cartas/Carta.h"
 #include "GestorCartas.h"
 #include "ControlUNO.h"
+#include "../util/Colores.h"
 
 class Juego {
 private:
@@ -26,6 +27,9 @@ private:
 
     bool partidaTerminada;
     Jugador* ganador;
+
+    Color colorActivo;
+    bool esperandoColor;
 
 public:
     // Constructor
@@ -65,6 +69,9 @@ public:
     void remezclarMazo();
 
     Jugador* jugadorActualPtr();
+
+    void elegirColor(Color nuevoColor);
+    [[nodiscard]] bool estaEsperandoColor() const;
 };
 
 #endif //UNO_JUEGO_H

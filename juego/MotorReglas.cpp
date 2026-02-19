@@ -5,8 +5,9 @@
 #include "MotorReglas.h"
 #include "../util/TiposCarta.h"
 #include "Juego.h"
+#include "../cartas/CartaComodin.h"
 
-bool MotorReglas::esJugadaValida(Carta* carta, Carta* superior) {
+bool MotorReglas::esJugadaValida(Carta* carta, Carta* superior, Color colorActivo) {
     // Si no hay carta superior (inicio de partida)
     if (superior == nullptr)
         return true;
@@ -15,12 +16,12 @@ bool MotorReglas::esJugadaValida(Carta* carta, Carta* superior) {
     if (carta->esNegra())
         return true;
 
-    // Coincide en color
-    if (carta->getColor() == superior->getColor())
-        return true;
-
     // Coincide en tipo
     if (carta->getTipo() == superior->getTipo())
+        return true;
+
+    // Coincide en color
+    if (carta->getColor() == colorActivo)
         return true;
 
     // Coincide en numero
@@ -65,7 +66,32 @@ void MotorReglas::aplicarEfecto(Carta* carta, Juego& juego) {
             break;
         }
 
-        case COMODIN:
+        case COMODIN:{
+
+            // Verificar si es comodín con robo
+            CartaComodin* comodin =
+                dynamic_cast<CartaComodin*>(carta);
+
+            if (comodin != nullptr &&
+                comodin->getCantidadRobo() > 0) {
+
+                juego.siguienteTurno();
+                Jugador* afectado = juego.getJugadorActual();
+
+                for (int i = 0;
+                     i < comodin->getCantidadRobo();
+                     i++) {
+
+                    Carta* robada = juego.robarDelMazo();
+                    if (robada != nullptr) {
+                        afectado->agregarCarta(robada);
+                    }
+                     }
+                }
+
+            break;
+        }
+
             break;
 
         case FLIP:

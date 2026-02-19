@@ -13,7 +13,8 @@ Juego::Juego(const Configuracion& configuracion)
       jugadorActual(nullptr),
       direccion(1),
       partidaTerminada(false),
-      ganador(nullptr)  {
+      ganador(nullptr),
+      esperandoColor(false) {
 }
 
 // Agrega un jugador a la lista circular
@@ -64,6 +65,11 @@ void Juego::iniciarPartida() {
     gestorCartas.inicializar(nJugadores, config);
     gestorCartas.repartirInicial(jugadores, 7);
     gestorCartas.colocarPrimeraCarta();
+
+    Carta* superior = gestorCartas.cartaSuperior();
+    if (superior != nullptr) {
+        colorActivo = superior->getColor();
+    }
 }
 
 bool Juego::jugarCarta(Carta* carta) {
@@ -72,8 +78,11 @@ bool Juego::jugarCarta(Carta* carta) {
     if (jugadorActual == nullptr)
         return false;
 
+    if (esperandoColor)
+        return false;
+
     //validar jugada
-    if (!MotorReglas::esJugadaValida(carta, gestorCartas.cartaSuperior()))
+    if (!MotorReglas::esJugadaValida(carta, gestorCartas.cartaSuperior(), colorActivo))
         return false;
 
     //Quitar carta de la mano
@@ -84,6 +93,14 @@ bool Juego::jugarCarta(Carta* carta) {
 
     //Poner carta en descarte
     gestorCartas.descartar(carta);
+
+    if (carta->getTipo() == COMODIN) {
+
+        esperandoColor = true;
+
+    } else {
+        colorActivo = carta->getColor();
+    }
 
     // Verificar si quedó con una carta
     controlUNO.verificarCartaUnica(jugadorActual->dato);
@@ -104,14 +121,18 @@ bool Juego::jugarCarta(Carta* carta) {
     MotorReglas::aplicarEfecto(carta, *this);
 
     // Pasar turno normalmente
-    siguienteTurno();
-
+    if (!esperandoColor) {
+        siguienteTurno();
+    }
     return true;
 }
 
 void Juego::robarCarta() {
 
     if (partidaTerminada || jugadorActual == nullptr)
+        return;
+
+    if (esperandoColor)
         return;
 
     Carta* carta = gestorCartas.robarCarta();
@@ -183,6 +204,25 @@ Jugador* Juego::jugadorActualPtr() {
         return nullptr;
 
     return jugadorActual->dato;
+}
+
+void Juego::elegirColor(Color nuevoColor) {
+
+    if (!esperandoColor)
+        return;
+
+    // No permitir NEGRO como color elegido
+    if (nuevoColor == NEGRO)
+        return;
+
+    colorActivo = nuevoColor;
+    esperandoColor = false;
+
+    siguienteTurno();
+}
+
+bool Juego::estaEsperandoColor() const {
+    return esperandoColor;
 }
 
 
