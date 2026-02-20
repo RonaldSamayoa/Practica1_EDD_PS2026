@@ -2,6 +2,11 @@ cmake_minimum_required(VERSION 4.1)
 project(UNO)
 
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
+set(CMAKE_AUTOUIC ON)
+
+find_package(Qt6 REQUIRED COMPONENTS Widgets)
 
 add_executable(UNO main.cpp
         estructuras/Nodo.h
@@ -29,3 +34,5 @@ add_executable(UNO main.cpp
         juego/ControlUNO.cpp
         juego/ControlUNO.h
 )
+
+target_link_libraries(UNO Qt6::Widgets)

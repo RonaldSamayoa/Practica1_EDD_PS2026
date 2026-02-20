@@ -39,29 +39,34 @@ void MotorReglas::aplicarEfecto(Carta* carta, Juego& juego) {
     switch (tipo) {
 
         case SKIP:
-            // Saltamos al siguiente jugador
-            juego.siguienteTurno();
+            //saltamos al siguiente jugador
+            juego.activarSalto();
             break;
 
         case REVERSE:
             juego.cambiarDireccion();
             // Si solo hay 2 jugadores, REVERSE actúa como SKIP
             if (juego.contarJugadoresPublico() == 2) {
-                juego.siguienteTurno();
+                juego.activarSalto();
             }
             break;
 
         case DRAW: {
-            // El siguiente jugador roba 2 cartas
-            juego.siguienteTurno();
 
-            Jugador* afectado = juego.getJugadorActual();
+            if (juego.getConfiguracion().isStacking()) {
+                juego.setRoboAcumulado(juego.getRoboAcumulado() + 2); //acumula +2
+            } else {
+                // Roba inmediatamente el siguiente jugador
+                Jugador* afectado = juego.obtenerSiguienteJugador();
 
-            for (int i = 0; i < 2; i++) {
+                for (int i = 0; i < 2; i++) {
+                    Carta* carta = juego.robarDelMazo();
+                    if (carta != nullptr)
+                        afectado->agregarCarta(carta);
+                }
 
-                Carta* carta = juego.robarDelMazo();
-                if (carta != nullptr)
-                    afectado->agregarCarta(carta);
+                // Marcar que debe saltarse
+                juego.activarSalto();
             }
             break;
         }
@@ -69,30 +74,26 @@ void MotorReglas::aplicarEfecto(Carta* carta, Juego& juego) {
         case COMODIN:{
 
             // Verificar si es comodín con robo
-            CartaComodin* comodin =
-                dynamic_cast<CartaComodin*>(carta);
+            CartaComodin* comodin = dynamic_cast<CartaComodin*>(carta);
 
-            if (comodin != nullptr &&
-                comodin->getCantidadRobo() > 0) {
+            if (comodin != nullptr && comodin->getCantidadRobo() > 0) {
+                if (juego.getConfiguracion().isStacking()) {
 
-                juego.siguienteTurno();
-                Jugador* afectado = juego.getJugadorActual();
+                    juego.setRoboAcumulado(juego.getRoboAcumulado() + comodin->getCantidadRobo());
+                } else {
+                    Jugador* afectado = juego.obtenerSiguienteJugador();
 
-                for (int i = 0;
-                     i < comodin->getCantidadRobo();
-                     i++) {
+                    for (int i = 0; i < comodin->getCantidadRobo(); i++) {
 
-                    Carta* robada = juego.robarDelMazo();
-                    if (robada != nullptr) {
-                        afectado->agregarCarta(robada);
+                        Carta* robada = juego.robarDelMazo();
+                        if (robada != nullptr)
+                            afectado->agregarCarta(robada);
                     }
-                     }
+                    juego.activarSalto();
                 }
-
+            }
             break;
         }
-
-            break;
 
         case FLIP:
             break;

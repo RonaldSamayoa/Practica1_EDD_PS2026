@@ -3,7 +3,7 @@
 //
 #include "Juego.h"
 #include "MotorReglas.h"
-
+#include "../cartas/CartaComodin.h"
 // Constructor
 Juego::Juego(const Configuracion& configuracion)
     : jugadores(),
@@ -14,7 +14,9 @@ Juego::Juego(const Configuracion& configuracion)
       direccion(1),
       partidaTerminada(false),
       ganador(nullptr),
-      esperandoColor(false) {
+      esperandoColor(false),
+      roboAcumulado(0),
+      saltarSiguiente(false){
 }
 
 // Agrega un jugador a la lista circular
@@ -73,6 +75,8 @@ void Juego::iniciarPartida() {
 }
 
 bool Juego::jugarCarta(Carta* carta) {
+    if (partidaTerminada)
+        return false;
 
     //Verificar que haya jugador actual
     if (jugadorActual == nullptr)
@@ -81,23 +85,44 @@ bool Juego::jugarCarta(Carta* carta) {
     if (esperandoColor)
         return false;
 
+    // verificar si es carta de robo
+    bool esCartaDeRobo = false;
+
+    if (carta->getTipo() == DRAW)
+        esCartaDeRobo = true;
+
+    if (carta->getTipo() == COMODIN) {
+        CartaComodin* c = dynamic_cast<CartaComodin*>(carta);
+        if (c != nullptr && c->getCantidadRobo() > 0)
+            esCartaDeRobo = true;
+    }
+    //manejo de robo acumulado
+    if (roboAcumulado > 0 && !esCartaDeRobo) {
+
+        //se roba lo acumulado
+        for (int i = 0; i < roboAcumulado; i++) {
+            Carta* robada = gestorCartas.robarCarta();
+            if (robada != nullptr)
+                jugadorActual->dato->agregarCarta(robada);
+        }
+        roboAcumulado = 0;
+        siguienteTurno();
+        return true;
+    }
+
     //validar jugada
     if (!MotorReglas::esJugadaValida(carta, gestorCartas.cartaSuperior(), colorActivo))
         return false;
 
-    //Quitar carta de la mano
-    bool eliminada = jugadorActual->dato->quitarCarta(carta);
-
-    if (!eliminada)
+    //Quitar carta
+    if (!jugadorActual->dato->quitarCarta(carta))
         return false;
 
     //Poner carta en descarte
     gestorCartas.descartar(carta);
 
     if (carta->getTipo() == COMODIN) {
-
         esperandoColor = true;
-
     } else {
         colorActivo = carta->getColor();
     }
@@ -111,16 +136,16 @@ bool Juego::jugarCarta(Carta* carta) {
         ganador = jugadorActual->dato;
         return true;
     }
-
-    if (partidaTerminada)
-        return false;
-
-    //Aplicar efecto según tipo
-    TipoCarta tipo = carta->getTipo();
-
+    //aplicar efecto
     MotorReglas::aplicarEfecto(carta, *this);
 
-    // Pasar turno normalmente
+    // Manejar salto si existe
+    if (debeSaltar()) {
+        siguienteTurno();
+        limpiarSalto();
+    }
+
+    // Avance normal
     if (!esperandoColor) {
         siguienteTurno();
     }
@@ -225,6 +250,41 @@ bool Juego::estaEsperandoColor() const {
     return esperandoColor;
 }
 
+int Juego::getRoboAcumulado() const {
+          return roboAcumulado;
+      }
+
+void Juego::setRoboAcumulado(int cantidad) {
+          roboAcumulado = cantidad;
+      }
+
+Configuracion& Juego::getConfiguracion() {
+          return config;
+      }
+
+void Juego::activarSalto() {
+    saltarSiguiente = true;
+}
+
+bool Juego::debeSaltar() const {
+    return saltarSiguiente;
+}
+
+void Juego::limpiarSalto() {
+    saltarSiguiente = false;
+}
+
+Jugador* Juego::obtenerSiguienteJugador() {
+
+    if (jugadorActual == nullptr)
+        return nullptr;
+
+    if (direccion == 1)
+        return jugadorActual->siguiente->dato;
+
+    Nodo<Jugador*>* anterior = jugadores.buscarAnterior(jugadorActual);
+    return anterior->dato;
+}
 
 
 

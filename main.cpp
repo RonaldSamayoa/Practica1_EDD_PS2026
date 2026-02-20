@@ -1,7 +1,9 @@
 #include <iostream>
 #include "estructuras/ListaSimple.h"
 #include "estructuras/Stack.h"
-// TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
+#include <QApplication>
+#include <QLabel>
+
 int main() {
     ListaSimple<int> lista;
     lista.insertarFinal(10);

@@ -31,6 +31,8 @@ private:
     Color colorActivo;
     bool esperandoColor;
 
+    int roboAcumulado;
+    bool saltarSiguiente;
 public:
     // Constructor
     Juego(const Configuracion& configuracion);
@@ -72,6 +74,16 @@ public:
 
     void elegirColor(Color nuevoColor);
     [[nodiscard]] bool estaEsperandoColor() const;
+
+    int getRoboAcumulado() const;
+    void setRoboAcumulado(int cantidad);
+    Configuracion& getConfiguracion();
+
+    void activarSalto();
+    bool debeSaltar() const;
+    void limpiarSalto();
+
+    Jugador* obtenerSiguienteJugador();
 };
 
 #endif //UNO_JUEGO_H
