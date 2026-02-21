@@ -33,3 +33,7 @@ bool Jugador::tieneColor(Color color) const {
     return false;
 }
 
+ListaSimple<Carta*>& Jugador::getMano() {
+    return mano;
+}
+

@@ -3,25 +3,51 @@
 #include "estructuras/Stack.h"
 #include <QApplication>
 #include <QLabel>
+#include "juego/Juego.h"
+#include "cartas/CartaNumero.h"
+#include "cartas/CartaAccion.h"
+#include "juego/Configuracion.h"
+#include <ctime>
+#include <cstdlib>
 
 int main() {
-    ListaSimple<int> lista;
-    lista.insertarFinal(10);
-    lista.insertarFinal(20);
-    lista.insertarFinal(30);
-    lista.mostrar();
+    srand(time(nullptr));
 
-    lista.eliminar(20);
-    lista.mostrar();
+    Configuracion config;
+    config.setStacking(false);
 
-    Stack<int> pila;
-    pila.push(5);
-    pila.push(15);
-    pila.push(25);
+    Juego juego(config);
 
-    std::cout << "Tope: " << pila.peek() << std::endl;
-    std::cout << "Pop: " << pila.pop() << std::endl;
-    std::cout << "Nuevo tope: " << pila.peek() << std::endl;
+    Jugador* A = new Jugador("A");
+    Jugador* B = new Jugador("B");
+
+    juego.agregarJugador(A);
+    juego.agregarJugador(B);
+
+    std::cout << "Antes de iniciar partida \n ";
+    juego.iniciarPartida();
+    std::cout << "Despues de iniciar partida \n ";
+
+    // Crear cartas manualmente
+    Carta* masDos = new CartaAccion(ROJO, DRAW);
+    Carta* cincoAzul = new CartaNumero(AZUL, 5);
+
+    A->agregarCarta(masDos);
+    B->agregarCarta(cincoAzul);
+
+    std::cout << "Turno inicial: "
+              << juego.getJugadorActual()->getNombre()
+              << "\n";
+
+    juego.jugarCarta(masDos);
+
+    std::cout << "Cartas de B después del +2: "
+              << B->cantidadCartas()
+              << "\n";
+
+    std::cout << "Turno actual ahora: "
+              << juego.getJugadorActual()->getNombre()
+              << "\n";
 
     return 0;
 }

@@ -6,6 +6,10 @@
 #include "../cartas/CartaNumero.h"
 #include "../cartas/CartaAccion.h"
 #include "../cartas/CartaComodin.h"
+#include <vector>
+#include <algorithm>
+#include <cstdlib>
+#include <ctime>
 
 void Mazo::construir(int cantidadJugadores, const Configuracion& config) {
 
@@ -89,40 +93,29 @@ int Mazo::contarElementos(ListaSimple<Carta*>& lista) {
 }
 
 void Mazo::barajarLista(ListaSimple<Carta*>& lista) {
-    // Se obtiene la cantidad total de elementos en la lista
-    int n = contarElementos(lista);
-    // Si la lista tiene 0 o 1 elemento, no es necesario barajar
-    if (n <= 1)
-        return;
 
-    // Se recorre la lista completa realizando reordenamientos progresivos
+    std::vector<Carta*> temp;
+
+    // Extrae todas las cartas de la lista original y las guarda en un vector temporal
+    while (!lista.estaVacia()) {
+        temp.push_back(lista.extraerPrimero());
+    }
+
+    int n = temp.size();
+
+    // Algoritmo Fisher-Yates para mezclar el vector
+    // Recorre desde el último elemento hasta el segundo
+    for (int i = n - 1; i > 0; i--) {
+
+        // Genera una posición aleatoria entre 0 e i
+        int j = rand() % (i + 1);
+
+        // Intercambia la carta actual con otra posición aleatoria
+        std::swap(temp[i], temp[j]);
+    }
+
+    // Inserta nuevamente las cartas ya mezcladas en la lista original
     for (int i = 0; i < n; i++) {
-        // Se extrae el primer elemento de la lista original. Esta carta será reinsertada en una nueva posición calculada
-        Carta* primera = lista.extraerPrimero();
-
-        // Se calcula una posición de inserción basada en la iteración actual
-        // La fórmula permite variar la posición sin utilizar números aleatorios
-        int saltos = (i * 3 + 1) % n;
-
-        // Se crea una lista temporal auxiliar para reconstruir el orden
-        ListaSimple<Carta*> temp;
-
-        // Se trasladan los primeros saltos de elementos de la lista original hacia la lista temporal, preservando su orden relativo
-        for (int j = 0; j < saltos && !lista.estaVacia(); j++) {
-            temp.insertarFinal(lista.extraerPrimero());
-        }
-
-        // Se inserta la carta extraída inicialmente en la nueva posición calculada
-        temp.insertarFinal(primera);
-
-        // Se trasladan los elementos restantes de la lista original hacia la lista temporal
-        while (!lista.estaVacia()) {
-            temp.insertarFinal(lista.extraerPrimero());
-        }
-
-        // Finalmente, se reconstruye la lista original utilizando el nuevo orden generado en la lista temporal
-        while (!temp.estaVacia()) {
-            lista.insertarFinal(temp.extraerPrimero());
-        }
+        lista.insertarFinal(temp[i]);
     }
 }

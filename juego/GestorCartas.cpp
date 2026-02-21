@@ -29,18 +29,37 @@ void GestorCartas::repartirInicial(ListaCircular<Jugador*>& jugadores, int canti
 
 // Coloca la primera carta válida (no negra) en el descarte
 void GestorCartas::colocarPrimeraCarta() {
+    // Si el mazo está vacío, no se puede colocar carta inicial
+    if (mazo.estaVacio())
+        return;
 
-    while (!mazo.estaVacio()) {
+    int intentos = 0;
 
+    // Se obtiene una cantidad límite razonable de intentos
+    // Esto evita un posible bucle infinito si todas las cartas restantes son negras
+    int limite = 200;
+
+    while (!mazo.estaVacio() && intentos < limite) {
+
+        // Se roba la carta superior del mazo
         Carta* carta = mazo.robar();
-        // Si no es comodín negro, se acepta como inicial
+
+        // Si la carta no es comodín negro, se acepta como carta inicial
         if (!carta->esNegra()) {
             descarte.push(carta);
-            break;
+            return;
         }
 
-        // Si es comodín negro, vuelve al fondo
+        // Si es negra, se devuelve al fondo del mazo
         mazo.apilar(carta);
+
+        intentos++;
+    }
+
+    // Si no se encontró carta válida después de varios intentos,
+    // se coloca la primera disponible para evitar bloqueo del juego
+    if (!mazo.estaVacio()) {
+        descarte.push(mazo.robar());
     }
 }
 
