@@ -7,9 +7,7 @@
 #include "../cartas/CartaAccion.h"
 #include "../cartas/CartaComodin.h"
 #include <vector>
-#include <algorithm>
 #include <cstdlib>
-#include <ctime>
 
 void Mazo::construir(int cantidadJugadores, const Configuracion& config) {
 
@@ -45,10 +43,19 @@ void Mazo::construir(int cantidadJugadores, const Configuracion& config) {
             }
         }
 
-        for (int i = 0; i < 4; i++) {
+        // 2 comodines normales
+        for (int i = 0; i < 2; i++) {
             bolsa.insertarFinal(new CartaComodin(0));
+        }
+
+        // 4 comodines +4
+        for (int i = 0; i < 4; i++) {
             bolsa.insertarFinal(new CartaComodin(4));
         }
+
+        // Agregar 2 cartas personalizadas por mazo
+        bolsa.insertarFinal(new CartaAccion(NEGRO, PERSONALIZADA));
+        bolsa.insertarFinal(new CartaAccion(NEGRO, PERSONALIZADA));
     }
 
     barajarLista(bolsa);
