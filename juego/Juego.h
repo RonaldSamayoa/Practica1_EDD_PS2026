@@ -12,6 +12,8 @@
 #include "GestorCartas.h"
 #include "ControlUNO.h"
 #include "../util/Colores.h"
+#include "../estructuras/ListaSimple.h"
+#include <string>
 
 class Juego {
 private:
@@ -33,6 +35,10 @@ private:
 
     int roboAcumulado;
     bool saltarSiguiente;
+
+    ListaSimple<std::string> castigosPersonalizados;
+    Nodo<std::string>* nodoCastigoActual;
+
 public:
     // Constructor
     Juego(const Configuracion& configuracion);
@@ -84,6 +90,12 @@ public:
     void limpiarSalto();
 
     Jugador* obtenerSiguienteJugador();
+
+    // Agrega un castigo personalizado
+    void agregarCastigo(const std::string& castigo);
+
+    // Devuelve el siguiente castigo disponible
+    std::string obtenerCastigo();
 };
 
 #endif //UNO_JUEGO_H

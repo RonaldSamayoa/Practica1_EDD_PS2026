@@ -98,8 +98,15 @@ void MotorReglas::aplicarEfecto(Carta* carta, Juego& juego) {
         case FLIP:
             break;
 
-        case PERSONALIZADA:
+        case PERSONALIZADA: {
+            std::string castigo = juego.obtenerCastigo();
+            std::cout << "CARTA PERSONALIZADA ACTIVADA" << std::endl;
+            std::cout << "Castigo: " << castigo << std::endl;
+            std::cout << "El siguiente jugador pierde el turno." << std::endl;
+
+            juego.activarSalto();
             break;
+        }
 
         case NUMERO:
         default:

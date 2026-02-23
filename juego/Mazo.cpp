@@ -101,28 +101,30 @@ int Mazo::contarElementos(ListaSimple<Carta*>& lista) {
 
 void Mazo::barajarLista(ListaSimple<Carta*>& lista) {
 
-    std::vector<Carta*> temp;
+    int n = contarElementos(lista);
 
-    // Extrae todas las cartas de la lista original y las guarda en un vector temporal
-    while (!lista.estaVacia()) {
-        temp.push_back(lista.extraerPrimero());
+    if (n <= 1)
+        return;
+
+    // Crear arreglo dinámico manual (NO STL)
+    Carta** arreglo = new Carta*[n];
+
+    // Pasar lista a arreglo
+    for (int i = 0; i < n; i++) {
+        arreglo[i] = lista.extraerPrimero();
     }
 
-    int n = temp.size();
-
-    // Algoritmo Fisher-Yates para mezclar el vector
-    // Recorre desde el último elemento hasta el segundo
+    // Algoritmo Fisher-Yates. Recorre desde el último elemento hasta el segundo
     for (int i = n - 1; i > 0; i--) {
-
-        // Genera una posición aleatoria entre 0 e i
         int j = rand() % (i + 1);
 
-        // Intercambia la carta actual con otra posición aleatoria
-        std::swap(temp[i], temp[j]);
+        Carta* temp = arreglo[i];
+        arreglo[i] = arreglo[j];
+        arreglo[j] = temp;
     }
-
-    // Inserta nuevamente las cartas ya mezcladas en la lista original
+    // Volver a insertar en la lista
     for (int i = 0; i < n; i++) {
-        lista.insertarFinal(temp[i]);
+        lista.insertarFinal(arreglo[i]);
     }
+    delete[] arreglo;
 }

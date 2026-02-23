@@ -16,7 +16,8 @@ Juego::Juego(const Configuracion& configuracion)
       ganador(nullptr),
       esperandoColor(false),
       roboAcumulado(0),
-      saltarSiguiente(false){
+      saltarSiguiente(false),
+      nodoCastigoActual(nullptr) {
 }
 
 // Agrega un jugador a la lista circular
@@ -286,6 +287,33 @@ Jugador* Juego::obtenerSiguienteJugador() {
     return anterior->dato;
 }
 
+void Juego::agregarCastigo(const std::string& castigo) {
+
+    castigosPersonalizados.insertarFinal(castigo);
+
+    // Si es el primer castigo, lo marcamos como inicio
+    if (nodoCastigoActual == nullptr) {
+        nodoCastigoActual = castigosPersonalizados.getCabeza();
+    }
+}
+
+std::string Juego::obtenerCastigo() {
+
+    if (nodoCastigoActual == nullptr)
+        return "Sin castigos definidos.";
+
+    std::string castigo = nodoCastigoActual->dato;
+
+    // Avanza al siguiente
+    nodoCastigoActual = nodoCastigoActual->siguiente;
+
+    // Si llega al final, vuelve al inicio
+    if (nodoCastigoActual == nullptr) {
+        nodoCastigoActual = castigosPersonalizados.getCabeza();
+    }
+
+    return castigo;
+}
 
 
 
