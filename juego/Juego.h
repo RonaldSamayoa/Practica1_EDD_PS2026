@@ -96,6 +96,8 @@ public:
 
     // Devuelve el siguiente castigo disponible
     std::string obtenerCastigo();
+
+    Carta* getCartaSuperior();
 };
 
 #endif //UNO_JUEGO_H

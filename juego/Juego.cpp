@@ -131,14 +131,15 @@ bool Juego::jugarCarta(Carta* carta) {
     // Verificar si quedó con una carta
     controlUNO.verificarCartaUnica(jugadorActual->dato);
 
+    //aplicar efecto
+    MotorReglas::aplicarEfecto(carta, *this);
+
     //Verificar si ganó
     if (jugadorActual->dato->sinCartas()) {
         partidaTerminada = true;
         ganador = jugadorActual->dato;
         return true;
     }
-    //aplicar efecto
-    MotorReglas::aplicarEfecto(carta, *this);
 
     // Manejar salto si existe
     if (debeSaltar()) {
@@ -315,5 +316,7 @@ std::string Juego::obtenerCastigo() {
     return castigo;
 }
 
-
+Carta* Juego::getCartaSuperior() {
+    return gestorCartas.cartaSuperior();
+}
 

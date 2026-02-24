@@ -41,10 +41,6 @@ public:
             case VERDE: return "Verde";
             case AZUL: return "Azul";
             case AMARILLO: return "Amarillo";
-            case ROSA: return "Rosa";
-            case TURQUESA: return "Turquesa";
-            case NARANJA: return "Naranja";
-            case VIOLETA: return "Violeta";
             case NEGRO: return "Negro";
             default: return "Desconocido";
         }

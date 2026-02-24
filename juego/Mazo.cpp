@@ -6,7 +6,6 @@
 #include "../cartas/CartaNumero.h"
 #include "../cartas/CartaAccion.h"
 #include "../cartas/CartaComodin.h"
-#include <vector>
 #include <cstdlib>
 
 void Mazo::construir(int cantidadJugadores, const Configuracion& config) {

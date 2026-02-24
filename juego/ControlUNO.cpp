@@ -21,22 +21,33 @@ void ControlUNO::declararUNO(Jugador* jugadorActual) {
 
     if (jugadorPendiente == jugadorActual) {
         unoDeclarado = true;
+        std::cout << jugadorActual->getNombre()
+                  << " grito UNO correctamente!\n";
+    } else {
+        std::cout << "No puedes declarar UNO en este momento.\n";
     }
 }
 
-void ControlUNO::reportarUNO(Jugador* jugadorActual,
-                             GestorCartas& gestor) {
+void ControlUNO::reportarUNO(Jugador* jugadorActual, GestorCartas& gestor) {
 
-    if (jugadorPendiente == nullptr)
+    if (jugadorPendiente == nullptr) {
+        std::cout << "No hay ningun jugador para reportar.\n";
         return;
+    }
 
     Jugador* penalizado;
 
     if (!unoDeclarado) {
         penalizado = jugadorPendiente;
+
+        std::cout << jugadorActual->getNombre()<< " reporto correctamente a "<< penalizado->getNombre()<< " por no gritar UNO!\n";
     } else {
         penalizado = jugadorActual;
+
+        std::cout << jugadorActual->getNombre()<< " reporto incorrectamente.\n";
     }
+
+    std::cout << penalizado->getNombre() << " recibe 2 cartas de penalizacion.\n";
 
     for (int i = 0; i < 2; i++) {
         Carta* carta = gestor.robarCarta();

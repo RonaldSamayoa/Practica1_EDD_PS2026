@@ -12,10 +12,6 @@ enum Color {
     VERDE,
     AZUL,
     AMARILLO,
-    ROSA,
-    TURQUESA,
-    NARANJA,
-    VIOLETA,
     NEGRO  // Para comodines
 };
 
