@@ -1,10 +1,10 @@
 #include <iostream>
 #include "estructuras/ListaSimple.h"
 #include "estructuras/Stack.h"
-#include <QApplication>
 #include "juego/Juego.h"
 #include "juego/Configuracion.h"
 #include <ctime>
+#include <limits>
 
 void mostrarMano(Jugador* jugador) {
     Nodo<Carta*>* temp = jugador->getMano().getCabeza();
@@ -65,10 +65,11 @@ int main() {
 
     std::cout << "\nDebes ingresar " << cantidadCartasPersonalizadas<< " castigos personalizados.\n";
 
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
     for (int i = 0; i < cantidadCartasPersonalizadas; i++) {
         std::string castigo;
         std::cout << "Castigo " << i + 1 << ": ";
-        std::cin.ignore();
         std::getline(std::cin, castigo);
         juego.agregarCastigo(castigo);
     }
@@ -76,7 +77,31 @@ int main() {
     juego.iniciarPartida();
 
     while (!juego.estaTerminada()) {
+        // Si se jugó comodín y se espera color
+        if (juego.estaEsperandoColor()) {
 
+            Jugador* actual = juego.getJugadorActual();
+            juego.limpiarEstadoUNO();
+            std::cout << "\n=== COMODIN ACTIVADO ===\n";
+            std::cout << actual->getNombre() << " debe elegir el nuevo color.\n";
+
+            std::cout << "0) ROJO\n";
+            std::cout << "1) VERDE\n";
+            std::cout << "2) AZUL\n";
+            std::cout << "3) AMARILLO\n";
+
+            int c;
+            std::cout << "Seleccione color: ";
+            std::cin >> c;
+
+            juego.elegirColor(static_cast<Color>(c));
+
+            std::cout << "Color elegido correctamente.\n\n";
+
+            continue;
+        }
+
+        //turno normal
         Jugador* actual = juego.getJugadorActual();
 
         std::cout << "\n==============================\n";
@@ -84,17 +109,24 @@ int main() {
         std::cout << "Carta superior:\n";
         juego.getCartaSuperior()->mostrar();
 
+        if (juego.getRoboAcumulado() > 0) {
+            std::cout << "Hay "<< juego.getRoboAcumulado()<< " cartas acumuladas.\n";
+        }
+
+        if (juego.getCartaSuperior()->esNegra()) {
+            std::cout << "Color activo actual: ";
+
+            switch (juego.getColorActivo()) {
+                case ROJO: std::cout << "ROJO\n"; break;
+                case VERDE: std::cout << "VERDE\n"; break;
+                case AZUL: std::cout << "AZUL\n"; break;
+                case AMARILLO: std::cout << "AMARILLO\n"; break;
+                default: break;
+            }
+        }
+
         std::cout << "\nTus cartas:\n";
         mostrarMano(actual);
-
-        // Si se jugó comodín y se espera color
-        if (juego.estaEsperandoColor()) {
-            int c;
-            std::cout << "\nElige color (0=ROJO,1=VERDE,2=AZUL,3=AMARILLO): ";
-            std::cin >> c;
-            juego.elegirColor(static_cast<Color>(c));
-            continue;
-        }
 
         mostrarMenu();
 
@@ -121,12 +153,10 @@ int main() {
 
             case 3:
                 juego.declararUNO();
-                std::cout << "UNO declarado.\n";
                 break;
 
             case 4:
                 juego.reportarUNO();
-                std::cout << "Reporte realizado.\n";
                 break;
 
             case 5:

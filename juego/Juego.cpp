@@ -14,6 +14,7 @@ Juego::Juego(const Configuracion& configuracion)
       direccion(1),
       partidaTerminada(false),
       ganador(nullptr),
+      colorActivo(),
       esperandoColor(false),
       roboAcumulado(0),
       saltarSiguiente(false),
@@ -52,9 +53,6 @@ void Juego::siguienteTurno() {
     } else {
         jugadorActual = jugadores.buscarAnterior(jugadorActual);
     }
-
-    // Si cambió el turno y nadie reportó, se pierde oportunidad
-    controlUNO.limpiarSiCambiaTurno(jugadorActual->dato);
 }
 
 void Juego::iniciarPartida() {
@@ -122,7 +120,7 @@ bool Juego::jugarCarta(Carta* carta) {
     //Poner carta en descarte
     gestorCartas.descartar(carta);
 
-    if (carta->getTipo() == COMODIN) {
+    if (carta->esNegra()) {
         esperandoColor = true;
     } else {
         colorActivo = carta->getColor();
@@ -320,3 +318,12 @@ Carta* Juego::getCartaSuperior() {
     return gestorCartas.cartaSuperior();
 }
 
+Color Juego::getColorActivo() const {
+    return colorActivo;
+}
+
+void Juego::limpiarEstadoUNO() {
+    if (jugadorActual != nullptr) {
+        controlUNO.limpiarSiCambiaTurno(jugadorActual->dato);
+    }
+}

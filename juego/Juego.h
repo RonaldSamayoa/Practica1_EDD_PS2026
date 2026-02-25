@@ -98,6 +98,8 @@ public:
     std::string obtenerCastigo();
 
     Carta* getCartaSuperior();
+    Color getColorActivo() const;
+    void limpiarEstadoUNO();
 };
 
 #endif //UNO_JUEGO_H
