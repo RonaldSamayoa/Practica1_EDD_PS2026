@@ -42,10 +42,29 @@ void mostrarMenu() {
     std::cout << "Seleccione opcion: ";
 }
 
+void configurarReglas(Configuracion& config) {
+    char opcion;
+
+    std::cout << "\n=== CONFIGURACION ===\n";
+
+    std::cout << "Activar stacking? (s/n): ";
+    std::cin >> opcion;
+    config.setStacking(opcion == 's' || opcion == 'S');
+
+    std::cout << "Obligatorio declarar UNO? (s/n): ";
+    std::cin >> opcion;
+    config.setReglaUNO(opcion == 's' || opcion == 'S');
+
+    std::cout << "Permitir ganar con negra? (s/n): ";
+    std::cin >> opcion;
+    config.setGanarConNegra(opcion == 's' || opcion == 'S');
+}
+
 int main() {
     srand(time(nullptr));
 
     Configuracion config;
+    configurarReglas(config);
     Juego juego(config);
 
     int numJugadores;
